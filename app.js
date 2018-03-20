@@ -5,18 +5,10 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
-var passport = require('passport');
-var JwtStrategy = require('passport-jwt').Strategy
-var ExtractJwt = require('passport-jwt').ExtractJwt
-
 var config = require('./constants/config');
 var member = require('./routes/member');
 var apis_auth = require('./routes/apis.auth');
 var app = express();
-app.use(passport.initialize());
-app.use(passport.session());
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,56 +22,32 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-passport.serializeUser(function (user, done) {
-  done(null, user.username)
-})
 
-/*
-passport.deserializeUser(function (username, done) {
-  done(null, username)
-})
-*/
+
 
 app.use('/member', member);
-var opts = {}
 
-// Setup JWT options
-opts.jwtFromRequest = ExtractJwt.fromHeader;
-opts.secretOrKey = config.jwt.secret;
+app.use(function (req, res, next) {
+  var token = req.headers['x-access-token'];
 
-passport.use(new JwtStrategy(opts, function (jwtPayload, done) {
-  //If the token has expiration, raise unauthorized
-  var expirationDate = new Date(jwtPayload.exp * 1000)
-  if(expirationDate < new Date()) {
-    return done(null, false);
+  if (!token) {
+    return res.status(403).json({
+      success: false,
+      message: 'x-access-token not beeing provided'
+    });
   }
-  var user = jwtPayload
-  done(null, user)
-}))
-// app.use(function (req, res, next) {
-//   var token = req.headers['x-access-token'];
 
-//   if (!token) {
-//     return res.status(403).json({
-//       success: false,
-//       message: 'x-access-token not beeing provided'
-//     });
-//   }
+  jwt.verify(token, config.jwt.secret, function (err, decoded) {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: 'Authenticate error'
+      });
+    }
 
-//   jwt.verify(token, config.jwt.secret, function (err, decoded) {
-//     if (err) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Authenticate error'
-//       });
-//     }
-
-//     req.decoded = decoded;
-//     next();
-//   })
-// });
-app.get('/test_jwt', passport.authenticate('jwt'), function (req, res) {
-  res.json({success: 'You are authenticated with JWT!', user: req.user})
+    req.decoded = decoded;
+    next();
+  })
 });
 
 app.use('/apis/auth', apis_auth);

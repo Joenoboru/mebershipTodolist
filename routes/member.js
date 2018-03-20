@@ -1,5 +1,6 @@
 var express = require('express');
 var models = require('../models');
+var Passport = require( 'passport' );
 var router = express.Router();
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
@@ -10,8 +11,9 @@ var _ = require('lodash');
 var messageConstants = require('../constants/messages');
 var config = require('../constants/config');
 var ServerError = require('../lib/ServerError');
-
 var refreshTokens = {};
+
+
 router.post('/register', function(req, res, next) {
   var account = req.body.account;
   var password = req.body.password;
@@ -118,7 +120,7 @@ router.post('/login', function(req, res, next) {
 
       // create jwt
       var jwt_token = jwt.sign(unflattenUserObject, config.jwt.secret, {
-        expiresIn: 300
+        expiresIn: 60*60*24
       });
 
       var refreshToken = randtoken.uid(256);

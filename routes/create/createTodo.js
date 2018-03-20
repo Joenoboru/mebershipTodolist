@@ -19,8 +19,8 @@ todoList.create({
   todoEvent: todoEvent,
   todoContent: todoContent,
   isFinished: false,
+  isDeleted: false,
   createdAt: createdAt,
-
 })
 .then(payload => {
   res.status(200).json({
@@ -35,6 +35,4 @@ todoList.create({
     message: err.errorMessage || messageConstants.failure.unknown
   });
 })
-
-
 }

@@ -8,7 +8,9 @@ module.exports = function(sequelize) {
       todoEvent: { type: Sequelize.STRING },
       todoContent: { type: Sequelize.STRING },
       isFinished: { type: Sequelize.BOOLEAN },
+      isDeleted: { type: Sequelize.BOOLEAN },
       createdAt: { type: Sequelize.DATE },
+      deletedAt: { type: Sequelize.DATE },
 
     },
     {
